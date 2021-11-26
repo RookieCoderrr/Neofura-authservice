@@ -71,11 +71,21 @@ export class AuthController {
     }
   }
 
-  @Get('email/verify/:token')
+  @Get('email/verifyLogin/:token')
   @ApiParam({ name: 'token', required: true, example: '4139054' })
-  public async verifyEmail(@Param() params): Promise<IResponse> {
+  public async verifyLoginEmail(@Param() params): Promise<IResponse> {
     try {
-      const isEmailVerified = await this.authService.verifyEmail(params.token);
+      const isEmailVerified = await this.authService.verifyLoginEmail(params.token);
+      return new ResponseSuccess('LOGIN.EMAIL_VERIFIED', isEmailVerified);
+    } catch (error) {
+      return new ResponseError('LOGIN.ERROR', error);
+    }
+  }
+  @Get('email/verifyForgotPassword/:token')
+  @ApiParam({ name: 'token', required: true, example: '4139054' })
+  public async verifyForgotPasswordEmail(@Param() params): Promise<IResponse> {
+    try {
+      const isEmailVerified = await this.authService.verifyForgotPasswordEmail(params.token);
       return new ResponseSuccess('LOGIN.EMAIL_VERIFIED', isEmailVerified);
     } catch (error) {
       return new ResponseError('LOGIN.ERROR', error);

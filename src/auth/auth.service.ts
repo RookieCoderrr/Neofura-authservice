@@ -108,7 +108,7 @@ export class AuthService {
     }
   }
 
-  async verifyEmail(token: string): Promise<boolean> {
+  async verifyLoginEmail(token: string): Promise<boolean> {
     const emailVerif = await this.emailVerificationModel.findOne({ emailToken: token });
     if (emailVerif && emailVerif.email) {
       const userFromDb = await this.userModel.findOne({ email: emailVerif.email });
@@ -122,6 +122,18 @@ export class AuthService {
       throw new HttpException('LOGIN.EMAIL_CODE_NOT_VALID', HttpStatus.FORBIDDEN);
     }
   }
+  async verifyForgotPasswordEmail(token: string): Promise<boolean> {
+    const emailVerif = await this.forgottenPasswordModel.findOne({ newPasswordToken: token });
+    if (emailVerif && emailVerif.email) {
+      const userFromDb = await this.userModel.findOne({ email: emailVerif.email });
+      if (userFromDb) {
+        await emailVerif.remove();
+        return !!emailVerif;
+      }
+    } else {
+      throw new HttpException('FORGOTPASSWORD.EMAIL_CODE_NOT_VALID', HttpStatus.FORBIDDEN);
+    }
+  }
 
   async getForgottenPasswordModel(newPasswordToken: string): Promise<ForgottenPassword> {
     return this.forgottenPasswordModel.findOne({newPasswordToken});
@@ -131,10 +143,10 @@ export class AuthService {
     let emailValue;
     if (func === 'register') {
       // tslint:disable-next-line:max-line-length
-      emailValue = '[neofura]Thanks for register, please click http://127.0.0.1:3000/auth/email/verify/' + emailToken + ' ,don\'t tell this token to anybody!';
+      emailValue = '[neofura]Thanks for register, please click http://127.0.0.1:3000/auth/email/verifyLogin/' + emailToken + ' ,don\'t tell this token to anybody!';
     } else if (func === 'forgottenPassword') {
       // tslint:disable-next-line:max-line-length
-      emailValue = '[neofura]You are changing your password, please click http://127.0.0.1:3000/auth/email/verify/' + emailToken + ' ,don\'t tell this token to anybody!';
+      emailValue = '[neofura]You are changing your password, please click http://127.0.0.1:3000/auth/email/verifyForgotPassword/' + emailToken + ' ,don\'t tell this token to anybody!';
     }
     const options = {
       method: 'POST',
