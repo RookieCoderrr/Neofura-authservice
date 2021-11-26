@@ -1,7 +1,7 @@
 import {Body, Controller, HttpException, HttpStatus, Param, Patch, UseGuards, UseInterceptors} from '@nestjs/common';
 import {FrozeGuard} from '../common/guards/froze.guard';
 import {RolesGuard} from '../common/guards/roles.guard';
-import {ApiBody, ApiOperation} from '@nestjs/swagger';
+import {ApiBody, ApiOperation, ApiParam} from '@nestjs/swagger';
 import {Roles} from '../common/decorators/roles.decorator';
 import {IResponse} from '../common/interfaces/response.interface';
 import {CreateProjectDto} from './dto/create-project.dto';
@@ -31,6 +31,7 @@ export class ProjectController {
     @ApiBody({
         schema: {
             example: {
+                email: '787136296@qq.com',
                 name: 'projects J',
                 introduction: 'a defi application',
             },
@@ -52,13 +53,13 @@ export class ProjectController {
     @Patch('delete')
     @UseGuards(FrozeGuard)
     @UseGuards(RolesGuard)
-    @ApiOperation({description: '更新一个项目'})
+    @ApiOperation({description: '删除一个项目'})
     @Roles('User')
     @ApiBody({
         schema: {
             example: {
-                name: 'projects X',
-                introduction: 'a defi application',
+                apikey: 'vnQiyDzZKufyyrQw',
+                email: '787136296@qq.com',
             },
         },
     })
@@ -76,11 +77,7 @@ export class ProjectController {
     @UseGuards(RolesGuard)
     @ApiOperation({description: '列出所有项目'})
     @Roles('User')
-    @ApiBody({
-        schema: {
-            example: {},
-        },
-    })
+    @ApiParam({ name: 'email' })
     async listProjects(@Param() params): Promise<IResponse> {
         try {
             const projects = await this.projectService.listProjects(params.email);
@@ -93,13 +90,9 @@ export class ProjectController {
     @Patch('rpcRecords')
     @UseGuards(FrozeGuard)
     @UseGuards(RolesGuard)
-    @ApiOperation({description: '列出所有项目'})
+    @ApiOperation({description: '列出该项目访问的所有RPC方法'})
     @Roles('User')
-    @ApiBody({
-        schema: {
-            example: {},
-        },
-    })
+    @ApiParam({ name: 'email' })
     async listRpcrecords(@Param() params): Promise<IResponse> {
         try {
             const rpcrecords = await this.projectService.listRpcrecords(params.apikey);
@@ -117,6 +110,8 @@ export class ProjectController {
     @ApiBody({
         schema: {
             example: {
+                apikey: 'vnQiyDzZKufyyrQw',
+                email: '787136296@qq.com',
                 name: 'projects X',
                 introduction: 'a defi application',
             },
@@ -134,13 +129,13 @@ export class ProjectController {
     @Patch('limitPerday')
     @UseGuards(FrozeGuard)
     @UseGuards(RolesGuard)
-    @ApiOperation({description: '更新一个项目'})
+    @ApiOperation({description: '设置项目每天访问次数'})
     @Roles('User')
     @ApiBody({
         schema: {
             example: {
-                name: 'projects X',
-                introduction: 'a defi application',
+                apikey: 'vnQiyDzZKufyyrQw',
+                limitperday: '1000',
             },
         },
     })
@@ -156,13 +151,13 @@ export class ProjectController {
     @Patch('projectOrigin')
     @UseGuards(FrozeGuard)
     @UseGuards(RolesGuard)
-    @ApiOperation({description: '更新一个项目'})
+    @ApiOperation({description: '设置项目允许访问的域名'})
     @Roles('User')
     @ApiBody({
         schema: {
             example: {
-                name: 'projects X',
-                introduction: 'a defi application',
+                apikey: 'vnQiyDzZKufyyrQw',
+                origin: 'localhost',
             },
         },
     })
@@ -178,13 +173,13 @@ export class ProjectController {
     @Patch('dprojectOrigin')
     @UseGuards(FrozeGuard)
     @UseGuards(RolesGuard)
-    @ApiOperation({description: '更新一个项目'})
+    @ApiOperation({description: '删除项目允许访问的域名'})
     @Roles('User')
     @ApiBody({
         schema: {
             example: {
-                name: 'projects X',
-                introduction: 'a defi application',
+                apikey: 'vnQiyDzZKufyyrQw',
+                origin: 'localhost',
             },
         },
     })

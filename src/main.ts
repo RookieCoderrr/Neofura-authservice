@@ -13,10 +13,9 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const options = new DocumentBuilder()
-  .setTitle('API')
+  .setTitle('Neofura-AuthAPI')
   .setDescription('The API description')
-  .setVersion('2.0')
-  .addTag('managements')
+  .setVersion('1.0')
   .build();
 
   const document = SwaggerModule.createDocument(app, options);
