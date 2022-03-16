@@ -15,6 +15,8 @@ import {UpdateProjectDto} from './dto/update-project.dto';
 import {SetLimitperdayDto} from './dto/set-limitperday.dto';
 import {DeleteProjectDt} from './dto/delete-project.dto';
 import {ProjectoriginDto} from './dto/projectorigin.dto';
+import {EnableProjectSecretDto} from './dto/enableProjectSecret.dto';
+import {AdminGuard} from '../common/guards/admin.guard';
 
 @Controller('project')
 @UseGuards(AuthGuard('jwt'))
@@ -128,6 +130,7 @@ export class ProjectController {
 
     @Patch('limitPerday')
     @UseGuards(FrozeGuard)
+    @UseGuards(AdminGuard)
     @UseGuards(RolesGuard)
     @ApiOperation({description: '设置项目每天访问次数'})
     @Roles('User')
@@ -145,6 +148,28 @@ export class ProjectController {
             return new ResponseSuccess('SETLIMITPERDAY.PROJECT.SUCCESS', updated);
         } catch (error) {
             return new ResponseError('SETLIMITPERDAY.PROJECT.ERROR', error);
+        }
+    }
+
+    @Patch('enableProjectSecret')
+    @UseGuards(FrozeGuard)
+    @UseGuards(RolesGuard)
+    @ApiOperation({description: '设置项目是否开启projectSecret'})
+    @Roles('User')
+    @ApiBody({
+        schema: {
+            example: {
+                apikey: 'vnQiyDzZKufyyrQw',
+                limitperday: '1000',
+            },
+        },
+    })
+    async enableProjectSecret(@Body() enableProjectSecretDto: EnableProjectSecretDto): Promise<IResponse> {
+        try {
+            const updated = await this.projectService.enableProjectSecret(enableProjectSecretDto);
+            return new ResponseSuccess('ENABLEPROJECTSECRET.PROJECT.SUCCESS', updated);
+        } catch (error) {
+            return new ResponseError('ENABLEPROJECTSECRET.PROJECT.ERROR', error);
         }
     }
 

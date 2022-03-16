@@ -9,6 +9,6 @@ export class SetLimitperdayDto {
 
     @ApiProperty()
     @IsNumber()
-    @Max(10000)
+    @Max(1000000)
     readonly limitperday: number;
 }

@@ -17,12 +17,13 @@ export class ResponseError implements IResponse{
 }
 
 export class ResponseSuccess implements IResponse{
-  constructor (infoMessage:string, data?: any, notLog?: boolean) {
+  constructor (infoMessage: string, data?: any, notLog?: boolean) {
     this.success = true;
     this.message = infoMessage;
     this.data = data;
-    if(!notLog) {
+    if (!notLog) {
       try {
+        // tslint:disable-next-line:prefer-const
         var offuscateRequest = JSON.parse(JSON.stringify(data));
         if(offuscateRequest && offuscateRequest.token) offuscateRequest.token = "*******";
         console.log(new Date().toString() + ' - [Response]: ' + JSON.stringify(offuscateRequest))

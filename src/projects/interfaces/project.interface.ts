@@ -7,5 +7,7 @@ export interface Project extends Document {
     apikey: string;
     apisecret: string;
     limitperday: number;
+    secretrequired: boolean;
     origin: Array<string>;
+    request: number;
 }
