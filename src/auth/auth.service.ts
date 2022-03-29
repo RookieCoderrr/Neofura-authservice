@@ -8,8 +8,12 @@ import { EmailVerification } from './interfaces/emailverification.interface';
 import { ForgottenPassword } from './interfaces/forgottenpassword.interface';
 import { ConsentRegistry } from './interfaces/consentregistry.interface';
 import { InjectModel } from '@nestjs/mongoose';
-// tslint:disable-next-line:no-var-requires
-const request = require('request');
+import config from '../config';
+import * as nodemailer from 'nodemailer';
+import * as fs from 'fs';
+import * as path from 'path';
+import mjml2html = require('mjml');
+import handlebars from 'handlebars';
 
 @Injectable()
 export class AuthService {
@@ -139,41 +143,74 @@ export class AuthService {
     return this.forgottenPasswordModel.findOne({newPasswordToken});
   }
 
-  async sendEmail(emailAddress: string, func: string, emailToken: string): Promise<boolean> {
+  async sendVerifyEmail(emailAddress: string, func: string, emailToken: string): Promise<boolean> {
+    const template = handlebars.compile(fs.readFileSync('src/auth/emailTemplate/email.mjml', 'utf8'));
+    const vars = {email : emailToken};
+    const html1 = mjml2html(template(vars)).html;
+    const transporter = nodemailer.createTransport({
+      host: config.mail.host,
+      port: config.mail.port,
+      secure: config.mail.secure,
+      auth: {
+        user: config.mail.user,
+        pass: config.mail.pass,
+      },
+    });
     let emailValue;
     if (func === 'register') {
       // tslint:disable-next-line:max-line-length
-      emailValue = '[neofura]Thanks for register, please click http://127.0.0.1:3000/auth/email/verifyLogin/' + emailToken + ' ,don\'t tell this token to anybody!';
+      emailValue = 'You have signed up for the Neofura. Please confirm your email address to continue setup. If you received this by mistake or were not expecting, please disregard this email. click http://127.0.0.1:3000/auth/email/verifyLogin/' + emailToken ;
     } else if (func === 'forgottenPassword') {
       // tslint:disable-next-line:max-line-length
       emailValue = '[neofura]You are changing your password, please click http://127.0.0.1:3000/auth/email/verifyForgotPassword/' + emailToken + ' ,don\'t tell this token to anybody!';
     }
-    const options = {
-      method: 'POST',
-      url: 'https://rapidprod-sendgrid-v1.p.rapidapi.com/mail/send',
-      headers: {
-        'content-type': 'application/json',
-        'x-rapidapi-host': 'rapidprod-sendgrid-v1.p.rapidapi.com',
-        'x-rapidapi-key': 'ae2ad23146msh06a431323e86027p11a924jsn731ce3762748',
-        'useQueryString': true,
-      },
-      body: {
-        personalizations: [{to: [{email: emailAddress}], subject: 'NeoFura Service Email Verification'}],
-        from: {email: 'norelpy@neofura.com'},
-        content: [{type: 'text/plain', value: emailValue}],
-      },
-      json: true,
+    const mailOptions = {
+      from: config.mail.user, // sender address
+      to: emailAddress, // list of receivers
+      subject: 'NeoFura Service', // Subject line
+      // 发送text或者html格式
+      // text: 'Hello world?', // plain text body
+      html: html1,
     };
-
-    return await request(options, (error, response, body) => {
-      if (error) throw new Error(error);
-    });
+    const res = await transporter.sendMail(mailOptions);
+    return res;
   }
-
+  async sendForgotPassEmail(emailAddress: string, func: string, emailToken: string): Promise<boolean> {
+    const template = handlebars.compile(fs.readFileSync('src/auth/emailTemplate/password.mjml', 'utf8'));
+    const vars = {email : emailToken};
+    const html1 = mjml2html(template(vars)).html;
+    const transporter = nodemailer.createTransport({
+      host: config.mail.host,
+      port: config.mail.port,
+      secure: config.mail.secure,
+      auth: {
+        user: config.mail.user,
+        pass: config.mail.pass,
+      },
+    });
+    let emailValue;
+    if (func === 'register') {
+      // tslint:disable-next-line:max-line-length
+      emailValue = 'You have signed up for the Neofura. Please confirm your email address to continue setup. If you received this by mistake or were not expecting, please disregard this email. click http://127.0.0.1:3000/auth/email/verifyLogin/' + emailToken ;
+    } else if (func === 'forgottenPassword') {
+      // tslint:disable-next-line:max-line-length
+      emailValue = '[neofura]You are changing your password, please click http://127.0.0.1:3000/auth/email/verifyForgotPassword/' + emailToken + ' ,don\'t tell this token to anybody!';
+    }
+    const mailOptions = {
+      from: config.mail.user, // sender address
+      to: emailAddress, // list of receivers
+      subject: 'NeoFura Service', // Subject line
+      // 发送text或者html格式
+      // text: 'Hello world?', // plain text body
+      html: html1,
+    };
+    const res = await transporter.sendMail(mailOptions);
+    return res;
+  }
   async sendEmailVerification(email: string, func: string): Promise<boolean> {
     const model = await this.emailVerificationModel.findOne({ email });
     if (model && model.emailToken) {
-      return await this.sendEmail(email, 'register', model.emailToken);
+      return await this.sendVerifyEmail(email, 'register', model.emailToken);
     } else {
       throw new HttpException('REGISTER.USER_NOT_REGISTERED', HttpStatus.FORBIDDEN);
     }
@@ -192,7 +229,7 @@ export class AuthService {
     const tokenModel = await this.createForgottenPasswordToken(email);
 
     if (tokenModel && tokenModel.newPasswordToken) {
-      return await this.sendEmail(email, 'forgottenPassword', tokenModel.newPasswordToken);
+      return await this.sendForgotPassEmail(email, 'forgottenPassword', tokenModel.newPasswordToken);
     } else {
       throw new HttpException('REGISTER.USER_NOT_REGISTERED', HttpStatus.FORBIDDEN);
     }

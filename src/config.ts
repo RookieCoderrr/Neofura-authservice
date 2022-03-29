@@ -16,10 +16,11 @@ export default {
         expiresIn: 10800,
     },
     mail: {
-        host: 'smtpdm.aliyun.com',
-        port: '465',
+        host: 'smtp.qq.com',
+        port: 465,
         secure: true,
-        user: 'noreply@ses.nerdtech.space',
-        pass: 'AZaz123456',
+        user: '787136296@qq.com',
+        pass: 'jjnfvhqwgeivbcdf',
+        sender: '<norelpy@neofura.com>',
     },
 };
