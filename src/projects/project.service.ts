@@ -13,6 +13,10 @@ import {SetLimitperdayDto} from './dto/set-limitperday.dto';
 import {DeleteProjectDt} from './dto/delete-project.dto';
 import {ProjectoriginDto} from './dto/projectorigin.dto';
 import {EnableProjectSecretDto} from './dto/enableProjectSecret.dto';
+import {FindByEmailApiKeyDto} from './dto/findByEmail.dto';
+import {SetLimitperSecondDto} from './dto/set-limitperSecond.dto';
+import {AllowContractDto} from './dto/allowContract.dto';
+import {ApiMethodDto} from './dto/apiMethod.dto';
 // tslint:disable-next-line:no-var-requires
 const stringRandom = require('string-random');
 
@@ -38,8 +42,6 @@ export class ProjectService {
             // generate apikey and api secret
             createdProject.apikey = Md5.hashStr(newProject.name + Date.parse(new Date().toString()));
             createdProject.apisecret = Md5.hashStr(newProject.email + newProject.name + Date.parse(new Date().toString()));
-            createdProject.request = 0;
-            createdProject.secretrequired = false;
             return await createdProject.save();
         } else {
             throw new HttpException('USER_NOT_FOUND', HttpStatus.FORBIDDEN);
@@ -67,15 +69,23 @@ export class ProjectService {
     }
 
     async listProjects(email: string): Promise <Project[]> {
-        const projects = await this.projectModel.find(email);
+        const projects = await this.projectModel.find({email}).exec();
         if (!projects) {
             throw new HttpException('COMMON.PROJECT_NOT_FIND', HttpStatus.NOT_FOUND);
         }
         return projects;
     }
 
+    async listProjectByProjectId(findByEmailApiKeyDto: FindByEmailApiKeyDto): Promise <Project> {
+        const project = await this.projectModel.findOne({email: findByEmailApiKeyDto.email, apikey : findByEmailApiKeyDto.apikey});
+        if (!project) {
+            throw new HttpException('COMMON.PROJECT_NOT_FIND', HttpStatus.NOT_FOUND);
+        }
+        return project;
+    }
+
     async listRpcrecords(apikey: string): Promise <Rpcrecord[]> {
-         const rpcrecords = await this.rpcrecordModel.find(apikey).exec();
+         const rpcrecords = await this.rpcrecordModel.find({apikey}).exec();
          if (!rpcrecords) {
             throw new HttpException('COMMON.PROJECTRPCRECORD_NOT_FIND', HttpStatus.NOT_FOUND);
          }
@@ -83,39 +93,99 @@ export class ProjectService {
     }
 
     async enableProjectSecret(enableProjectSecretDto: EnableProjectSecretDto): Promise <Project> {
-        const projectFromDb = await this.projectModel.findOne({apikey: enableProjectSecretDto.apikey});
+        const projectFromDb = await this.projectModel.findOne({apikey: enableProjectSecretDto.apikey, email: enableProjectSecretDto.email});
         if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
-        if (enableProjectSecretDto.enable) projectFromDb.secretrequired = enableProjectSecretDto.enable;
+        projectFromDb.secretrequired = enableProjectSecretDto.enable;
         return await projectFromDb.save();
     }
 
     async setProjectLimitPerday(setLimitperday: SetLimitperdayDto): Promise <Project> {
-        const projectFromDb = await this.projectModel.findOne({apikey: setLimitperday.apikey});
+        const projectFromDb = await this.projectModel.findOne({apikey: setLimitperday.apikey, email: setLimitperday.email });
         if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
-        if (setLimitperday.limitperday) projectFromDb.limitperday = setLimitperday.limitperday;
+        if (setLimitperday.limitPerday) projectFromDb.limitperday = setLimitperday.limitPerday;
         // tslint:disable-next-line:no-console
         return await projectFromDb.save();
     }
+
+    async setProjectLimitPerSecond(setLimitperSecondDto: SetLimitperSecondDto): Promise <Project> {
+        const projectFromDb = await this.projectModel.findOne({apikey: setLimitperSecondDto.apikey, email: setLimitperSecondDto.email });
+        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (setLimitperSecondDto.limitPerSecond) projectFromDb.limitpersecond = setLimitperSecondDto.limitPerSecond;
+        // tslint:disable-next-line:no-console
+        return await projectFromDb.save();
+    }
+    async addApiMethod(apiMethodDto: ApiMethodDto): Promise <Project> {
+        const projectFromDb = await this.projectModel.findOne({apikey: apiMethodDto.apikey, email: apiMethodDto.email});
+        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (apiMethodDto.apiMethod) {
+            if (projectFromDb.apiRequest.indexOf(apiMethodDto.apiMethod) !== -1) {
+                throw new HttpException('PROJECT_APIMETHOD_ALREADY_EXISTED', HttpStatus.NOT_FOUND);
+            }
+            projectFromDb.apiRequest.push(apiMethodDto.apiMethod);
+        }
+        return await projectFromDb.save();
+    }
+
+    async deleteApiMethod(apiMethodDto: ApiMethodDto): Promise <Project> {
+        const projectFromDb = await this.projectModel.findOne({apikey: apiMethodDto.apikey});
+        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (apiMethodDto.apiMethod) {
+            const index = projectFromDb.apiRequest.indexOf(apiMethodDto.apiMethod, 0);
+            if (index > -1) {
+                projectFromDb.apiRequest.splice(index, 1);
+            } else {
+                throw new HttpException('PROJECT_APIMETHOD_NO_EXISTED', HttpStatus.NOT_FOUND);
+            }
+        }
+        return await projectFromDb.save();
+    }
+
     async setOrigin(projectOrigin: ProjectoriginDto): Promise <Project> {
-        const projectFromDb = await this.projectModel.findOne({apikey: projectOrigin.apikey});
+        const projectFromDb = await this.projectModel.findOne({apikey: projectOrigin.apikey, email: projectOrigin.email});
         if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
         if (projectOrigin.origin) {
             if (projectFromDb.origin.indexOf(projectOrigin.origin) !== -1) {
-                throw new HttpException('PROJECT_HOST_ALREADY_EXISTED', HttpStatus.NOT_FOUND);
+                throw new HttpException('PROJECT_ORIGIN_ALREADY_EXISTED', HttpStatus.NOT_FOUND);
             }
             projectFromDb.origin.push(projectOrigin.origin);
         }
         return await projectFromDb.save();
     }
     async deleteOrigin(projectOrigin: ProjectoriginDto): Promise <Project> {
-        const projectFromDb = await this.projectModel.findOne({apikey: projectOrigin.apikey});
+        const projectFromDb = await this.projectModel.findOne({apikey: projectOrigin.apikey , email: projectOrigin.email});
         if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
         if (projectOrigin.origin) {
             const index = projectFromDb.origin.indexOf(projectOrigin.origin, 0);
             if (index > -1) {
                 projectFromDb.origin.splice(index, 1);
             } else {
-                throw new HttpException('PROJECT_HOST_NO_EXISTED', HttpStatus.NOT_FOUND);
+                throw new HttpException('PROJECT_ORIGIN_NO_EXISTED', HttpStatus.NOT_FOUND);
+            }
+        }
+        return await projectFromDb.save();
+    }
+
+    async addContract(allowContractDto: AllowContractDto): Promise <Project> {
+        const projectFromDb = await this.projectModel.findOne({apikey: allowContractDto.apikey, email: allowContractDto.email});
+        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (allowContractDto.contract) {
+            if (projectFromDb.contractAddress.indexOf(allowContractDto.contract) !== -1) {
+                throw new HttpException('PROJECT_ALLOWCONTRACT_ALREADY_EXISTED', HttpStatus.NOT_FOUND);
+            }
+            projectFromDb.contractAddress.push(allowContractDto.contract);
+        }
+        return await projectFromDb.save();
+    }
+
+    async deleteContract(allowContractDto: AllowContractDto): Promise <Project> {
+        const projectFromDb = await this.projectModel.findOne({apikey: allowContractDto.apikey, email: allowContractDto.email});
+        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (allowContractDto.contract) {
+            const index = projectFromDb.contractAddress.indexOf(allowContractDto.contract, 0);
+            if (index > -1) {
+                projectFromDb.contractAddress.splice(index, 1);
+            } else {
+                throw new HttpException('PROJECT_ALLOWCONTRACT_NO_EXISTED', HttpStatus.NOT_FOUND);
             }
         }
         return await projectFromDb.save();

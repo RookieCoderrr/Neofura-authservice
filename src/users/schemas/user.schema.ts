@@ -9,4 +9,6 @@ export const UserSchema = new mongoose.Schema({
   status: String,
   auth: Boolean,
   password: String,
-});
+},
+    {collection: 'users', versionKey: false},
+    );

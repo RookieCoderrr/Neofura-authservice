@@ -17,6 +17,11 @@ import {DeleteProjectDt} from './dto/delete-project.dto';
 import {ProjectoriginDto} from './dto/projectorigin.dto';
 import {EnableProjectSecretDto} from './dto/enableProjectSecret.dto';
 import {AdminGuard} from '../common/guards/admin.guard';
+import {FindByEmailApiKeyDto} from './dto/findByEmail.dto';
+import {FindByEmailDto} from './dto/findByEmailApiKey.dto';
+import {SetLimitperSecondDto} from './dto/set-limitperSecond.dto';
+import {AllowContractDto} from './dto/allowContract.dto';
+import {ApiMethodDto} from './dto/apiMethod.dto';
 
 @Controller('project')
 @UseGuards(AuthGuard('jwt'))
@@ -79,11 +84,23 @@ export class ProjectController {
     @UseGuards(RolesGuard)
     @ApiOperation({description: '列出所有项目'})
     @Roles('User')
-    @ApiParam({ name: 'email' })
-    async listProjects(@Param() params): Promise<IResponse> {
+    async listProjects(@Body() findByEmailDto: FindByEmailDto): Promise<IResponse> {
         try {
-            const projects = await this.projectService.listProjects(params.email);
+            const projects = await this.projectService.listProjects(findByEmailDto.email);
             return new ResponseSuccess('PROFILE.LIST_SUCCESS', projects);
+        } catch (error) {
+            return new ResponseError('PROFILE.LIST_ERROR', error);
+        }
+    }
+    @Patch('listByProjectId')
+    @UseGuards(FrozeGuard)
+    @UseGuards(RolesGuard)
+    @ApiOperation({description: '列出具体某一个项目'})
+    @Roles('User')
+    async listProjectByProjectId(@Body() findByEmailApiKeyDto: FindByEmailApiKeyDto): Promise<IResponse> {
+        try {
+            const project = await this.projectService.listProjectByProjectId(findByEmailApiKeyDto);
+            return new ResponseSuccess('PROFILE.LIST_SUCCESS', project);
         } catch (error) {
             return new ResponseError('PROFILE.LIST_ERROR', error);
         }
@@ -95,9 +112,9 @@ export class ProjectController {
     @ApiOperation({description: '列出该项目访问的所有RPC方法'})
     @Roles('User')
     @ApiParam({ name: 'email' })
-    async listRpcrecords(@Param() params): Promise<IResponse> {
+    async listRpcrecords(@Body() findByEmailApiKeyDto: FindByEmailApiKeyDto): Promise<IResponse> {
         try {
-            const rpcrecords = await this.projectService.listRpcrecords(params.apikey);
+            const rpcrecords = await this.projectService.listRpcrecords(findByEmailApiKeyDto.apikey);
             return new ResponseSuccess('RPCRECORD.LIST_SUCCESS', rpcrecords);
         } catch (error) {
             return new ResponseError('RPCRECORD.LIST_ERROR', error);
@@ -130,7 +147,6 @@ export class ProjectController {
 
     @Patch('limitPerday')
     @UseGuards(FrozeGuard)
-    @UseGuards(AdminGuard)
     @UseGuards(RolesGuard)
     @ApiOperation({description: '设置项目每天访问次数'})
     @Roles('User')
@@ -151,19 +167,33 @@ export class ProjectController {
         }
     }
 
-    @Patch('enableProjectSecret')
+    @Patch('limitPerSecond')
     @UseGuards(FrozeGuard)
     @UseGuards(RolesGuard)
-    @ApiOperation({description: '设置项目是否开启projectSecret'})
+    @ApiOperation({description: '设置项目每秒访问次数'})
     @Roles('User')
     @ApiBody({
         schema: {
             example: {
                 apikey: 'vnQiyDzZKufyyrQw',
-                limitperday: '1000',
+                limitperSecond: '10',
             },
         },
     })
+    async setProjectLimitPerSecond(@Body() setLimitperSecondDto: SetLimitperSecondDto): Promise<IResponse> {
+        try {
+            const updated = await this.projectService.setProjectLimitPerSecond(setLimitperSecondDto);
+            return new ResponseSuccess('SETLIMITPERSECOND.PROJECT.SUCCESS', updated);
+        } catch (error) {
+            return new ResponseError('SETLIMITPERSECOND.PROJECT.ERROR', error);
+        }
+    }
+
+    @Patch('enableProjectSecret')
+    @UseGuards(FrozeGuard)
+    @UseGuards(RolesGuard)
+    @ApiOperation({description: '设置项目是否开启projectSecret'})
+    @Roles('User')
     async enableProjectSecret(@Body() enableProjectSecretDto: EnableProjectSecretDto): Promise<IResponse> {
         try {
             const updated = await this.projectService.enableProjectSecret(enableProjectSecretDto);
@@ -195,7 +225,7 @@ export class ProjectController {
         }
     }
 
-    @Patch('dprojectOrigin')
+    @Patch('deleteProjectOrigin')
     @UseGuards(FrozeGuard)
     @UseGuards(RolesGuard)
     @ApiOperation({description: '删除项目允许访问的域名'})
@@ -208,12 +238,86 @@ export class ProjectController {
             },
         },
     })
-    async delteProjectOrigin(@Body() projectOrigin: ProjectoriginDto ): Promise<IResponse> {
+    async deleteProjectOrigin(@Body() projectOrigin: ProjectoriginDto ): Promise<IResponse> {
         try {
             const updated = await this.projectService.deleteOrigin(projectOrigin);
             return new ResponseSuccess('DELETEORIGIN.PROJECT.SUCCESS', updated);
         } catch (error) {
             return new ResponseError('FELTEORIGIN.PROJECT.ERROR', error);
+        }
+    }
+
+    @Patch('allowContract')
+    @UseGuards(FrozeGuard)
+    @UseGuards(RolesGuard)
+    @ApiOperation({description: '设置项目允许调用的合约'})
+    @Roles('User')
+
+    async setAllowContract(@Body() allowContractDto: AllowContractDto): Promise<IResponse> {
+        try {
+            const updated = await this.projectService.addContract(allowContractDto);
+            return new ResponseSuccess('ADDCONTRACT.PROJECT.SUCCESS', updated);
+        } catch (error) {
+            return new ResponseError('ADDCONTRACT.PROJECT.ERROR', error);
+        }
+    }
+
+    @Patch('deleteAllowContract')
+    @UseGuards(FrozeGuard)
+    @UseGuards(RolesGuard)
+    @ApiOperation({description: '删除项目允许调用的合约'})
+    @Roles('User')
+    @ApiBody({
+        schema: {
+            example: {
+                apikey: 'vnQiyDzZKufyyrQw',
+                origin: 'localhost',
+            },
+        },
+    })
+    async deleteAllowContract(@Body() allowContractDto: AllowContractDto ): Promise<IResponse> {
+        try {
+            const updated = await this.projectService.deleteContract(allowContractDto);
+            return new ResponseSuccess('DELETECONTRACT.PROJECT.SUCCESS', updated);
+        } catch (error) {
+            return new ResponseError('DELETECONTRACT.PROJECT.ERROR', error);
+        }
+    }
+
+    @Patch('apiMethod')
+    @UseGuards(FrozeGuard)
+    @UseGuards(RolesGuard)
+    @ApiOperation({description: '设置项目允许调用的方法'})
+    @Roles('User')
+
+    async addApiMethod(@Body() apiMethodDto: ApiMethodDto): Promise<IResponse> {
+        try {
+            const updated = await this.projectService.addApiMethod(apiMethodDto);
+            return new ResponseSuccess('ADDAPIMETHOD.PROJECT.SUCCESS', updated);
+        } catch (error) {
+            return new ResponseError('ADDAPIMETHOD.PROJECT.ERROR', error);
+        }
+    }
+
+    @Patch('deleteApiMethod')
+    @UseGuards(FrozeGuard)
+    @UseGuards(RolesGuard)
+    @ApiOperation({description: '删除项目允许调用的方法'})
+    @Roles('User')
+    @ApiBody({
+        schema: {
+            example: {
+                apikey: 'vnQiyDzZKufyyrQw',
+                origin: 'localhost',
+            },
+        },
+    })
+    async deleteApiMethod(@Body() apiMethodDto: ApiMethodDto ): Promise<IResponse> {
+        try {
+            const updated = await this.projectService.deleteApiMethod(apiMethodDto);
+            return new ResponseSuccess('DELETEAPIMETHOD.PROJECT.SUCCESS', updated);
+        } catch (error) {
+            return new ResponseError('DELETEAPIMETHOD.PROJECT.ERROR', error);
         }
     }
 }

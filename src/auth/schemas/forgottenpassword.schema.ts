@@ -4,4 +4,6 @@ export const ForgottenPasswordSchema = new mongoose.Schema({
   email: String,
   newPasswordToken: String,
   timestamp: Date,
-});
+},
+    {collection: 'forgottenpasswords', versionKey: false},
+    );

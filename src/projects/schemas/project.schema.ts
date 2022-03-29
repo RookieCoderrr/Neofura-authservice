@@ -8,6 +8,12 @@ export const ProjectSchema = new mongoose.Schema({
     apisecret: String,
     introduction: String,
     secretrequired: {type: Boolean, default: false},
-    limitperday: {type: Number, default: 10000},
+    limitperday: {type: Number, default: 5000},
+    limitpersecond: {type: Number, default: 10},
+    request: {type: Number, default: 0},
     origin: {type: Array, default: []},
-});
+    contractAddress: {type: Array, default: []},
+    apiRequest: {type: Array, default: []},
+},
+    {collection: 'projects', versionKey: false},
+    );

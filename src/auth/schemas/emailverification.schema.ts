@@ -4,4 +4,6 @@ export const EmailVerificationSchema = new mongoose.Schema({
   email: String,
   emailToken: String,
   timestamp: Date,
-});
+},
+    {collection: 'emailverifications', versionKey: false},
+    );

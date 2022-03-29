@@ -1,7 +1,7 @@
 import {IsString, MaxLength, IsEmail, IsOptional, Max, IsNumber} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ProjectoriginDto {
+export class AllowContractDto {
     @IsEmail()
     @ApiProperty()
     readonly email: string;
@@ -12,5 +12,5 @@ export class ProjectoriginDto {
 
     @ApiProperty()
     @IsString()
-    readonly origin: string;
+    readonly contract: string;
 }

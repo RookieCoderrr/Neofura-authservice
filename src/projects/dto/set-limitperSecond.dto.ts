@@ -1,7 +1,7 @@
 import {IsString, MaxLength, IsEmail, IsOptional, Max, IsNumber, Min} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SetLimitperdayDto {
+export class SetLimitperSecondDto {
     @IsEmail()
     @ApiProperty()
     readonly email: string;
@@ -14,5 +14,5 @@ export class SetLimitperdayDto {
     @IsNumber()
     @Max(5000)
     @Min(0)
-    readonly limitPerday: number;
+    readonly limitPerSecond: number;
 }

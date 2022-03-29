@@ -8,4 +8,6 @@ export const ConsentRegistrySchema = new mongoose.Schema({
   privacyPolicy: String,
   cookiePolicy: String,
   acceptedPolicy: String,
-});
+},
+    {collection: 'consentregistries', versionKey: false},
+    );
