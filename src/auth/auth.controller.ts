@@ -123,6 +123,33 @@ export class AuthController {
     }
   }
 
+  // @Post('email/reset-password')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiBody({
+  //   schema: {
+  //     example: {
+  //       email: '947801604@qq.com',
+  //       newPassword: 'fdfffFf9f',
+  //       newPasswordToken: 'newPasswordToken',
+  //       currentPassword: 'fdfffFf9f',
+  //     },
+  //   },
+  // })
+  // public async setNewPassword(@Body() resetPassword: ResetPasswordDto): Promise<IResponse> {
+  //   try {
+  //     let isNewPasswordChanged: boolean = false;
+  //     if (resetPassword.email && resetPassword.newPasswordToken) {
+  //       const forgottenPasswordModel = await this.authService.getForgottenPasswordModel(resetPassword.newPasswordToken);
+  //       isNewPasswordChanged = await this.userService.setPassword(forgottenPasswordModel.email, resetPassword.newPassword);
+  //       if (isNewPasswordChanged) await forgottenPasswordModel.remove();
+  //     } else {
+  //       return new ResponseError('RESET_PASSWORD.CHANGE_PASSWORD_ERROR');
+  //     }
+  //     return new ResponseSuccess('RESET_PASSWORD.PASSWORD_CHANGED', isNewPasswordChanged);
+  //   } catch (error) {
+  //     return new ResponseError('RESET_PASSWORD.CHANGE_PASSWORD_ERROR', error);
+  //   }
+  // }
   @Post('email/reset-password')
   @HttpCode(HttpStatus.OK)
   @ApiBody({
@@ -147,8 +174,12 @@ export class AuthController {
         }
       } else if (resetPassword.newPasswordToken) {
         const forgottenPasswordModel = await this.authService.getForgottenPasswordModel(resetPassword.newPasswordToken);
-        isNewPasswordChanged = await this.userService.setPassword(forgottenPasswordModel.email, resetPassword.newPassword);
-        if (isNewPasswordChanged) await forgottenPasswordModel.remove();
+        if (forgottenPasswordModel) {
+          isNewPasswordChanged = await this.userService.setPassword(forgottenPasswordModel.email, resetPassword.newPassword);
+          if (isNewPasswordChanged) await forgottenPasswordModel.remove();
+        } else {
+          return new ResponseError('RESET_PASSWORD.TOKEN_ERROR');
+        }
       } else {
         return new ResponseError('RESET_PASSWORD.CHANGE_PASSWORD_ERROR');
       }

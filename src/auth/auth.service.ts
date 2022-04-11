@@ -131,8 +131,9 @@ export class AuthService {
     if (emailVerif && emailVerif.email) {
       const userFromDb = await this.userModel.findOne({ email: emailVerif.email });
       if (userFromDb) {
-        await emailVerif.remove();
-        return !!emailVerif;
+        // await emailVerif.remove();
+        // return !!emailVerif;
+        return true;
       }
     } else {
       throw new HttpException('FORGOTPASSWORD.EMAIL_CODE_NOT_VALID', HttpStatus.FORBIDDEN);
@@ -145,7 +146,7 @@ export class AuthService {
 
   async sendVerifyEmail(emailAddress: string, func: string, emailToken: string): Promise<boolean> {
     const template = handlebars.compile(fs.readFileSync('src/auth/emailTemplate/email.mjml', 'utf8'));
-    const vars = {email : emailToken};
+    const vars = {token : emailToken, email : emailAddress};
     const html1 = mjml2html(template(vars)).html;
     const transporter = nodemailer.createTransport({
       host: config.mail.host,
@@ -177,7 +178,7 @@ export class AuthService {
   }
   async sendForgotPassEmail(emailAddress: string, func: string, emailToken: string): Promise<boolean> {
     const template = handlebars.compile(fs.readFileSync('src/auth/emailTemplate/password.mjml', 'utf8'));
-    const vars = {email : emailToken};
+    const vars = {token : emailToken, email : emailAddress};
     const html1 = mjml2html(template(vars)).html;
     const transporter = nodemailer.createTransport({
       host: config.mail.host,
