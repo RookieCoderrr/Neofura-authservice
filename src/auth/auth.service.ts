@@ -92,7 +92,7 @@ export class AuthService {
 
   async createForgottenPasswordToken(email: string): Promise<ForgottenPassword> {
     const forgottenPassword = await this.forgottenPasswordModel.findOne({ email });
-    if (forgottenPassword && ((new Date().getTime() - forgottenPassword.timestamp.getTime()) / 60000 < 15)) {
+    if (forgottenPassword && ((new Date().getTime() - forgottenPassword.timestamp.getTime()) / 60000 < 1)) {
       throw new HttpException('RESET_PASSWORD.EMAIL_SENDED_RECENTLY', HttpStatus.INTERNAL_SERVER_ERROR);
     } else {
       const forgottenPasswordModel = await this.forgottenPasswordModel.findOneAndUpdate(
@@ -168,7 +168,7 @@ export class AuthService {
     const mailOptions = {
       from: config.mail.user, // sender address
       to: emailAddress, // list of receivers
-      subject: 'NeoFura Service', // Subject line
+      subject: 'Magnet Service', // Subject line
       // 发送text或者html格式
       // text: 'Hello world?', // plain text body
       html: html1,
@@ -200,7 +200,7 @@ export class AuthService {
     const mailOptions = {
       from: config.mail.user, // sender address
       to: emailAddress, // list of receivers
-      subject: 'NeoFura Service', // Subject line
+      subject: 'Magnet Service', // Subject line
       // 发送text或者html格式
       // text: 'Hello world?', // plain text body
       html: html1,

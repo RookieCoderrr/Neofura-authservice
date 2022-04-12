@@ -114,12 +114,12 @@ export class AuthController {
     try {
       const isEmailSent = await this.authService.sendEmailForgotPassword(params.email);
       if (isEmailSent) {
-        return new ResponseSuccess('LOGIN.EMAIL_RESENT', null);
+        return new ResponseSuccess('FORGOTPASSWORD.EMAIL_RESENT', null);
       } else {
-        return new ResponseError('REGISTRATION.ERROR.MAIL_NOT_SENT');
+        return new ResponseError('FORGOTPASSWORD.ERROR.MAIL_NOT_SENT');
       }
     } catch (error) {
-      return new ResponseError('LOGIN.ERROR.SEND_EMAIL', error);
+      return new ResponseError('FORGOTPASSWORD.ERROR.SEND_EMAIL', error);
     }
   }
 
