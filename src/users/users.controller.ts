@@ -7,7 +7,7 @@ import {
   Body,
   UseGuards,
   UseInterceptors,
-  Param,
+  Param, Patch,
 } from '@nestjs/common';
 import { UserDto } from './dto/user.dto';
 import { UsersService } from './users.service';
@@ -25,6 +25,9 @@ import { User } from './interfaces/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { AdminGuard } from 'common/guards/admin.guard';
+import {FrozeGuard} from '../common/guards/froze.guard';
+import {UpdateProjectDto} from '../projects/dto/update-project.dto';
+import {UpdateUserDto} from './dto/updateUser.dto';
 
 @Controller('users')
 @UseGuards(AuthGuard('jwt'))
@@ -68,6 +71,18 @@ export class UsersController {
       return new ResponseSuccess('COMMON.SUCCESS', new UserDto(user));
     } catch (error) {
       return new ResponseError('COMMON.ERROR.GENERIC_ERROR', error);
+    }
+  }
+
+  @Patch('updateNickName')
+  @UseGuards(RolesGuard)
+  @Roles('User')
+  async updateNickName(@Body() updateUserDto: UpdateUserDto): Promise<IResponse> {
+    try {
+      const updated = await this.usersService.updateUserNickName(updateUserDto);
+      return new ResponseSuccess('UPDATE.USER.SUCCESS', updated);
+    } catch (error) {
+      return new ResponseError('UPDATE.USER.ERROR', error);
     }
   }
 

@@ -4,6 +4,7 @@ export const UserSchema = new mongoose.Schema({
   id: String,
   date: { type: Date, default: Date.now },
   email: String,
+  nickname: String,
   role: String,
   level: String,
   status: String,

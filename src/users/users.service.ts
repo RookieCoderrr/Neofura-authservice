@@ -6,6 +6,9 @@ import { User } from './interfaces/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { ProfileListDto } from './dto/profile-list.dto';
 import { AuthService } from 'auth/auth.service';
+import {UpdateProjectDto} from '../projects/dto/update-project.dto';
+import {Project} from '../projects/interfaces/project.interface';
+import {UpdateUserDto} from './dto/updateUser.dto';
 
 const saltRounds = 10;
 
@@ -31,6 +34,7 @@ export class UsersService {
         createdUser.status = 'NORMAL';
         createdUser.level = 1;
         createdUser.auth = false;
+        createdUser.nickname = 'Magneter';
         return await createdUser.save();
       } else if (!userRegistered.auth) {
         return userRegistered;
@@ -54,6 +58,12 @@ export class UsersService {
       const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
       return re.test(email);
     } else return false;
+  }
+  async updateUserNickName(updateUserDto: UpdateUserDto): Promise <User> {
+    const userFromDb = await this.userModel.findOne({ email: updateUserDto.email});
+    if (!userFromDb) { throw new HttpException('COMMON.USER_NOT_FOUND', HttpStatus.NOT_FOUND); }
+    if (updateUserDto.name) userFromDb.nickname = updateUserDto.name;
+    return await userFromDb.save();
   }
 
   async setPassword(email: string, newPassword: string): Promise<boolean> {
