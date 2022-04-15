@@ -1,4 +1,5 @@
 import { Document } from 'mongoose';
+import mongoose from 'mongoose';
 
 export interface Rpcrecord extends Document {
     apikey: string;

@@ -1,4 +1,4 @@
-import {Body, Controller, HttpException, HttpStatus, Param, Patch, UseGuards, UseInterceptors} from '@nestjs/common';
+import {Body, Controller, HttpException, HttpStatus, Param, Patch, Post, UseGuards, UseInterceptors} from '@nestjs/common';
 import {FrozeGuard} from '../common/guards/froze.guard';
 import {RolesGuard} from '../common/guards/roles.guard';
 import {ApiBody, ApiOperation, ApiParam} from '@nestjs/swagger';
@@ -22,6 +22,8 @@ import {FindByEmailDto} from './dto/findByEmailApiKey.dto';
 import {SetLimitperSecondDto} from './dto/set-limitperSecond.dto';
 import {AllowContractDto} from './dto/allowContract.dto';
 import {ApiMethodDto} from './dto/apiMethod.dto';
+import {ProfileListDto} from '../users/dto/profile-list.dto';
+import {FindBydateDto} from './dto/findBydate.dto';
 
 @Controller('project')
 @UseGuards(AuthGuard('jwt'))
@@ -112,9 +114,9 @@ export class ProjectController {
     @ApiOperation({description: '列出该项目访问的所有RPC方法'})
     @Roles('User')
     @ApiParam({ name: 'email' })
-    async listRpcrecords(@Body() findByEmailApiKeyDto: FindByEmailApiKeyDto): Promise<IResponse> {
+    async listRpcrecords(@Body() findBydateDto: FindBydateDto): Promise<IResponse> {
         try {
-            const rpcrecords = await this.projectService.listRpcrecords(findByEmailApiKeyDto.apikey);
+            const rpcrecords = await this.projectService.listRpcrecords(findBydateDto);
             return new ResponseSuccess('RPCRECORD.LIST_SUCCESS', rpcrecords);
         } catch (error) {
             return new ResponseError('RPCRECORD.LIST_ERROR', error);

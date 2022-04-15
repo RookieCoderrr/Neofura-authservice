@@ -3,7 +3,7 @@ import {User} from '../users/interfaces/user.interface';
 import {Project} from './interfaces/project.interface';
 import {CreateProjectDto} from './dto/create-project.dto';
 import {InjectModel} from '@nestjs/mongoose';
-import {Model, Schema} from 'mongoose';
+import {Model, Schema, Types} from 'mongoose';
 import {UpdateProjectDto} from './dto/update-project.dto';
 import * as http from 'http';
 import {Rpcrecord} from './interfaces/rpcrecord.interface';
@@ -17,6 +17,8 @@ import {FindByEmailApiKeyDto} from './dto/findByEmail.dto';
 import {SetLimitperSecondDto} from './dto/set-limitperSecond.dto';
 import {AllowContractDto} from './dto/allowContract.dto';
 import {ApiMethodDto} from './dto/apiMethod.dto';
+import {ProfileListDto} from '../users/dto/profile-list.dto';
+import {FindBydateDto} from './dto/findBydate.dto';
 // tslint:disable-next-line:no-var-requires
 const stringRandom = require('string-random');
 
@@ -24,14 +26,17 @@ const stringRandom = require('string-random');
 export class ProjectService {
 
     // tslint:disable-next-line:max-line-length
-    constructor(@InjectModel('User') private readonly userModel: Model<User>, @InjectModel('Project') private readonly projectModel: Model<Project>, @InjectModel('Rpcrecord') private readonly rpcrecordModel: Model<Rpcrecord>) { }
+    constructor(@InjectModel('User') private readonly userModel: Model<User>, @InjectModel('Project') private readonly projectModel: Model<Project>, @InjectModel('Rpcrecord') private readonly rpcrecordModel: Model<Rpcrecord>) {
+    }
 
     async findByEmail(email: string): Promise<User> {
-        return await this.userModel.findOne({ email }).exec();
+        return await this.userModel.findOne({email}).exec();
     }
-    async findProjectByApikey(apikey: string, email: string): Promise<Project>{
+
+    async findProjectByApikey(apikey: string, email: string): Promise<Project> {
         return await this.projectModel.findOne({apikey, email}).exec();
     }
+
     async createProject(newProject: CreateProjectDto): Promise<Project> {
         const isExisted = await this.findByEmail(newProject.email);
         if (isExisted) {
@@ -47,20 +52,25 @@ export class ProjectService {
             throw new HttpException('USER_NOT_FOUND', HttpStatus.FORBIDDEN);
         }
     }
+
     async deleteProject(deleteProject: DeleteProjectDt): Promise<{ ok?: number; n?: number } & { deletedCount?: number }> {
         const isExisted = await this.findByEmail(deleteProject.email);
         if (isExisted) {
             const projectFromDb = this.findProjectByApikey(deleteProject.apikey, deleteProject.email);
-            if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
-            return  await this.projectModel.deleteOne({apikey: deleteProject.apikey}).exec();
+            if (!projectFromDb) {
+                throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+            }
+            return await this.projectModel.deleteOne({apikey: deleteProject.apikey}).exec();
         } else {
             throw new HttpException('USER_NOT_FOUND', HttpStatus.FORBIDDEN);
         }
     }
 
-    async updateProject(updateProject: UpdateProjectDto): Promise <Project> {
+    async updateProject(updateProject: UpdateProjectDto): Promise<Project> {
         const projectFromDb = await this.projectModel.findOne({apikey: updateProject.apikey, email: updateProject.email});
-        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (!projectFromDb) {
+            throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
         if (updateProject.name) projectFromDb.name = updateProject.name;
         if (updateProject.introduction) projectFromDb.introduction = updateProject.introduction;
         // tslint:disable-next-line:no-console
@@ -68,7 +78,7 @@ export class ProjectService {
         return await projectFromDb.save();
     }
 
-    async listProjects(email: string): Promise <Project[]> {
+    async listProjects(email: string): Promise<Project[]> {
         const projects = await this.projectModel.find({email}).exec();
         if (!projects) {
             throw new HttpException('COMMON.PROJECT_NOT_FIND', HttpStatus.NOT_FOUND);
@@ -76,47 +86,85 @@ export class ProjectService {
         return projects;
     }
 
-    async listProjectByProjectId(findByEmailApiKeyDto: FindByEmailApiKeyDto): Promise <Project> {
-        const project = await this.projectModel.findOne({email: findByEmailApiKeyDto.email, apikey : findByEmailApiKeyDto.apikey});
+    async listProjectByProjectId(findByEmailApiKeyDto: FindByEmailApiKeyDto): Promise<Project> {
+        const project = await this.projectModel.findOne({email: findByEmailApiKeyDto.email, apikey: findByEmailApiKeyDto.apikey});
         if (!project) {
             throw new HttpException('COMMON.PROJECT_NOT_FIND', HttpStatus.NOT_FOUND);
         }
         return project;
     }
 
-    async listRpcrecords(apikey: string): Promise <Rpcrecord[]> {
-         const rpcrecords = await this.rpcrecordModel.find({apikey}).exec();
-         if (!rpcrecords) {
+    async listRpcrecords(findBydateDto: FindBydateDto) {
+        const query: any = {
+            timestamp: {
+                $gte: (findBydateDto.start) ,
+                $lte: (findBydateDto.end),
+            },
+        };
+        if (findBydateDto.apikey) { query.apikey = findBydateDto.apikey; }
+        const results = await this.rpcrecordModel.find(query).exec();
+        if (!results) {
             throw new HttpException('COMMON.PROJECTRPCRECORD_NOT_FIND', HttpStatus.NOT_FOUND);
-         }
-         return rpcrecords;
+        }
+        // tslint:disable-next-line:no-console
+        // console.log(results);
+        const statics: number[] = new Array(Math.ceil((findBydateDto.end - findBydateDto.start) / 86400000));
+        for (let i = 0; i < statics.length; i++) {
+            statics[i] = 0;
+        }
+        // tslint:disable-next-line:no-console
+        // tslint:disable-next-line:prefer-for-of
+        for (let i = 0; i < results.length; i++) {
+            // tslint:disable-next-line:no-console
+            const key = Math.floor( (results[i].timestamp - findBydateDto.start) / 86400000) ;
+            // tslint:disable-next-line:no-console
+            console.log(results[i].timestamp);
+            // tslint:disable-next-line:no-console
+            console.log(findBydateDto.start);
+            // tslint:disable-next-line:no-console
+            console.log(key);
+            statics[key]  ++ ;
+            // tslint:disable-next-line:no-console
+            console.log(statics);
+        }
+        const total = await this.rpcrecordModel.find(query).count().exec();
+        return {statics, total};
     }
 
-    async enableProjectSecret(enableProjectSecretDto: EnableProjectSecretDto): Promise <Project> {
+    async enableProjectSecret(enableProjectSecretDto: EnableProjectSecretDto): Promise<Project> {
         const projectFromDb = await this.projectModel.findOne({apikey: enableProjectSecretDto.apikey, email: enableProjectSecretDto.email});
-        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (!projectFromDb) {
+            throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
         projectFromDb.secretrequired = enableProjectSecretDto.enable;
         return await projectFromDb.save();
     }
 
-    async setProjectLimitPerday(setLimitperday: SetLimitperdayDto): Promise <Project> {
-        const projectFromDb = await this.projectModel.findOne({apikey: setLimitperday.apikey, email: setLimitperday.email });
-        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+    async setProjectLimitPerday(setLimitperday: SetLimitperdayDto): Promise<Project> {
+        const projectFromDb = await this.projectModel.findOne({apikey: setLimitperday.apikey, email: setLimitperday.email});
+        if (!projectFromDb) {
+            throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
         if (setLimitperday.limitPerday) projectFromDb.limitperday = setLimitperday.limitPerday;
         // tslint:disable-next-line:no-console
         return await projectFromDb.save();
     }
 
-    async setProjectLimitPerSecond(setLimitperSecondDto: SetLimitperSecondDto): Promise <Project> {
-        const projectFromDb = await this.projectModel.findOne({apikey: setLimitperSecondDto.apikey, email: setLimitperSecondDto.email });
-        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+    async setProjectLimitPerSecond(setLimitperSecondDto: SetLimitperSecondDto): Promise<Project> {
+        const projectFromDb = await this.projectModel.findOne({apikey: setLimitperSecondDto.apikey, email: setLimitperSecondDto.email});
+        if (!projectFromDb) {
+            throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
         if (setLimitperSecondDto.limitPerSecond) projectFromDb.limitpersecond = setLimitperSecondDto.limitPerSecond;
         // tslint:disable-next-line:no-console
         return await projectFromDb.save();
     }
-    async addApiMethod(apiMethodDto: ApiMethodDto): Promise <Project> {
+
+    async addApiMethod(apiMethodDto: ApiMethodDto): Promise<Project> {
         const projectFromDb = await this.projectModel.findOne({apikey: apiMethodDto.apikey, email: apiMethodDto.email});
-        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (!projectFromDb) {
+            throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
         if (apiMethodDto.apiMethod) {
             if (projectFromDb.apiRequest.indexOf(apiMethodDto.apiMethod) !== -1) {
                 throw new HttpException('PROJECT_APIMETHOD_ALREADY_EXISTED', HttpStatus.NOT_FOUND);
@@ -126,9 +174,11 @@ export class ProjectService {
         return await projectFromDb.save();
     }
 
-    async deleteApiMethod(apiMethodDto: ApiMethodDto): Promise <Project> {
+    async deleteApiMethod(apiMethodDto: ApiMethodDto): Promise<Project> {
         const projectFromDb = await this.projectModel.findOne({apikey: apiMethodDto.apikey});
-        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (!projectFromDb) {
+            throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
         if (apiMethodDto.apiMethod) {
             const index = projectFromDb.apiRequest.indexOf(apiMethodDto.apiMethod, 0);
             if (index > -1) {
@@ -140,9 +190,11 @@ export class ProjectService {
         return await projectFromDb.save();
     }
 
-    async setOrigin(projectOrigin: ProjectoriginDto): Promise <Project> {
+    async setOrigin(projectOrigin: ProjectoriginDto): Promise<Project> {
         const projectFromDb = await this.projectModel.findOne({apikey: projectOrigin.apikey, email: projectOrigin.email});
-        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (!projectFromDb) {
+            throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
         if (projectOrigin.origin) {
             if (projectFromDb.origin.indexOf(projectOrigin.origin) !== -1) {
                 throw new HttpException('PROJECT_ORIGIN_ALREADY_EXISTED', HttpStatus.NOT_FOUND);
@@ -151,9 +203,12 @@ export class ProjectService {
         }
         return await projectFromDb.save();
     }
-    async deleteOrigin(projectOrigin: ProjectoriginDto): Promise <Project> {
-        const projectFromDb = await this.projectModel.findOne({apikey: projectOrigin.apikey , email: projectOrigin.email});
-        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+
+    async deleteOrigin(projectOrigin: ProjectoriginDto): Promise<Project> {
+        const projectFromDb = await this.projectModel.findOne({apikey: projectOrigin.apikey, email: projectOrigin.email});
+        if (!projectFromDb) {
+            throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
         if (projectOrigin.origin) {
             const index = projectFromDb.origin.indexOf(projectOrigin.origin, 0);
             if (index > -1) {
@@ -165,9 +220,11 @@ export class ProjectService {
         return await projectFromDb.save();
     }
 
-    async addContract(allowContractDto: AllowContractDto): Promise <Project> {
+    async addContract(allowContractDto: AllowContractDto): Promise<Project> {
         const projectFromDb = await this.projectModel.findOne({apikey: allowContractDto.apikey, email: allowContractDto.email});
-        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (!projectFromDb) {
+            throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
         if (allowContractDto.contract) {
             if (projectFromDb.contractAddress.indexOf(allowContractDto.contract) !== -1) {
                 throw new HttpException('PROJECT_ALLOWCONTRACT_ALREADY_EXISTED', HttpStatus.NOT_FOUND);
@@ -177,9 +234,11 @@ export class ProjectService {
         return await projectFromDb.save();
     }
 
-    async deleteContract(allowContractDto: AllowContractDto): Promise <Project> {
+    async deleteContract(allowContractDto: AllowContractDto): Promise<Project> {
         const projectFromDb = await this.projectModel.findOne({apikey: allowContractDto.apikey, email: allowContractDto.email});
-        if (!projectFromDb) { throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND); }
+        if (!projectFromDb) {
+            throw new HttpException('COMMON.PROJECT_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
         if (allowContractDto.contract) {
             const index = projectFromDb.contractAddress.indexOf(allowContractDto.contract, 0);
             if (index > -1) {
