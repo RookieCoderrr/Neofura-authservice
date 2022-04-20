@@ -15,7 +15,7 @@ services:
 
   nestjs:
     build:
-      context: ./src
+      context: .
       dockerfile: Dockerfile
     ports:
     - 3000:3000
