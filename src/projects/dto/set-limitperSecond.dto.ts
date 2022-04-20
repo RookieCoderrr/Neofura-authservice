@@ -12,7 +12,7 @@ export class SetLimitperSecondDto {
 
     @ApiProperty()
     @IsNumber()
-    @Max(5000)
+    @Max(100)
     @Min(0)
     readonly limitPerSecond: number;
 }
