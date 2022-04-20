@@ -8,7 +8,8 @@ services:
     ports:
     - 3000:3000
     networks:
-      - mynetwork
+      - magnet
 
 networks:
-  mynetwork:
+  magnet:
+    external: true

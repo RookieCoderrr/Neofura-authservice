@@ -2,7 +2,7 @@ export default {
     db: {
         user: null,
         pass: null,
-        host: '0.0.0.0',
+        host: 'magnetdb',
         port: '27017',
         database: 'testdb',
         authSource: null,
