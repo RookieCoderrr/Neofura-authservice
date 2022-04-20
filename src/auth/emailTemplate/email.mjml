@@ -44,7 +44,7 @@
 <!--</mjml>-->
 <mjml>
   <mj-body background-color="#FFF">
-    <mj-wrapper  background-url="https://i.postimg.cc/NfDj2tQ9/background2.png" border-radius="5px">
+    <mj-wrapper  background-url="https://i.postimg.cc/mDKFqsP2/background.png" border-radius="5px">
       <mj-section full-width="full-width">
         <mj-column width="34%" >
           <mj-image src="https://i.postimg.cc/C5vsdt13/logo.png" alt="OnePage" padding-bottom="0px" padding-top="10px"></mj-image>
@@ -67,7 +67,7 @@
           <mj-text color="#000" font-size="16px" line-height="30px">You've signed up for the Magnet. Please confirm your email address to continue setup. If you received this by mistake or were not expecting it, please disregard this email.
           </mj-text>
           <mj-spacer height="10px"></mj-spacer>
-          <mj-button background-color="#4d56E1" width="250px" height="40px" href="http://127.0.0.1:8080/verifyEmailSuccess/{{token}}">CONFIRM EMAIL ADDRESS</mj-button>
+          <mj-button background-color="#4d56E1" width="250px" height="40px" href="http://20.25.70.212/verifyEmailSuccess/{{token}}">CONFIRM EMAIL ADDRESS</mj-button>
         </mj-column>
       </mj-section>
 
