@@ -13,17 +13,14 @@ services:
     networks:
       - mynetwork
 
-  mongo-express:
-    image: mongo-express
+  nestjs:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
     ports:
-      - 8081:8081
+    - 3000:3000
     networks:
       - mynetwork
-    environment:
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: password
-    depends_on:
-      - mongo
 
 volumes:
   mongodata:
