@@ -30,7 +30,7 @@ import {UpdateProjectDto} from '../projects/dto/update-project.dto';
 import {UpdateUserDto} from './dto/updateUser.dto';
 
 @Controller('users')
-@UseGuards(AuthGuard('jwt'))
+
 @UseInterceptors(LoggingInterceptor)
 export class UsersController {
   // tslint:disable-next-line:max-line-length
@@ -38,8 +38,6 @@ export class UsersController {
   }
 
   @Get('user/:email')
-  @UseGuards(RolesGuard)
-  @Roles('User')
   @ApiParam({name: 'email', required: true, example: '947801604@qq.com'})
   @ApiProduces('application/json; charset=utf-8')
   @ApiResponse({
@@ -76,6 +74,7 @@ export class UsersController {
 
   @Patch('updateNickName')
   @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Roles('User')
   async updateNickName(@Body() updateUserDto: UpdateUserDto): Promise<IResponse> {
     try {
@@ -88,6 +87,7 @@ export class UsersController {
 
   @UseGuards(AdminGuard)
   @Post('profile/list')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({description: '查找所有用户信息'})
   @ApiBody({
     schema: {
@@ -113,6 +113,7 @@ export class UsersController {
 
   @UseGuards(AdminGuard)
   @Post('freeze')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({description: '冻结账户'})
   @ApiBody({
     schema: {
@@ -132,6 +133,7 @@ export class UsersController {
 
   @UseGuards(AdminGuard)
   @Post('unfreeze')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({description: '解冻账户'})
   @ApiBody({
     schema: {
