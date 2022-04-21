@@ -102,6 +102,7 @@ export class ProjectService {
             },
         };
         if (findBydateDto.apikey) { query.apikey = findBydateDto.apikey; }
+        if (findBydateDto.net) { query.net = findBydateDto.net; }
         const results = await this.rpcrecordModel.find(query).exec();
         if (!results) {
             throw new HttpException('COMMON.PROJECTRPCRECORD_NOT_FIND', HttpStatus.NOT_FOUND);
