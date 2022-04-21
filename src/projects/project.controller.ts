@@ -48,9 +48,9 @@ export class ProjectController {
     })
     async createProject(@Body() createProjectDto: CreateProjectDto): Promise<IResponse> {
         try {
-            const newProject = new ProjectDto(await this.projectService.createProject(createProjectDto));
+            const newProject = await this.projectService.createProject(createProjectDto);
             if (newProject) {
-                return new ResponseSuccess('CREATE.PROJECT.SUCCESS');
+                return new ResponseSuccess('CREATE.PROJECT.SUCCESS', newProject);
             } else {
                 return new ResponseError('CREATE.PROJECT.ERROR');
             }
