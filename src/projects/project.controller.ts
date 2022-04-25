@@ -286,7 +286,7 @@ export class ProjectController {
         }
     }
 
-    @Patch('apiMethod')
+    @Patch('method')
     @UseGuards(FrozeGuard)
     @UseGuards(RolesGuard)
     @ApiOperation({description: '设置项目允许调用的方法'})
