@@ -1,7 +1,7 @@
 export default {
     db: {
-        user: null,
-        pass: null,
+        user: 'magneter',
+        pass: 'neo3magneter',
         host: 'magnetdb',
         port: '27017',
         database: 'testdb',
