@@ -67,7 +67,7 @@
           <mj-text color="#000" font-size="16px" line-height="30px">You've signed up for the Magnet. Please confirm your email address to continue setup. If you received this by mistake or were not expecting it, please disregard this email.
           </mj-text>
           <mj-spacer height="10px"></mj-spacer>
-          <mj-button background-color="#4d56E1" width="250px" height="40px" href="http://20.25.70.212/verifyEmailSuccess/{{token}}">CONFIRM EMAIL ADDRESS</mj-button>
+          <mj-button background-color="#4d56E1" width="250px" height="40px" href="https://dashboard.n3magnet.xyz/verifyEmailSuccess/{{token}}">CONFIRM EMAIL ADDRESS</mj-button>
         </mj-column>
       </mj-section>
 
