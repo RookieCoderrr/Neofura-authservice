@@ -20,7 +20,7 @@ export default {
         port: 465,
         secure: true,
         user: '787136296@qq.com',
-        pass: 'jjnfvhqwgeivbcdf',
+        pass: 'ujhrjhpezzblbedf',
         sender: '<norelpy@neofura.com>',
     },
 };
